@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.DEBUG)
 app = Flask(__name__)
 
 
-def init_jaeger_tracer(service_name='flask-webapp-01', jaeger_host=os.getenv("JAEGER_HOST", "localhost")):
+def init_jaeger_tracer(service_name='flask-webapp-01', jaeger_host=os.getenv("JAEGER_HOST", "10.170.24.242")):
     config = Config(config={'sampler': {'type': 'const', 'param': 1}, 'local_agent': {'reporting_host': jaeger_host}},
                     service_name=service_name,
                     validate=True)
@@ -33,7 +33,7 @@ install_all_patches()
 def trace_func(func):
     @wraps(func)
     def _wrappper(*args, **kwargs):
-        with flask_tracer.tracer.start_active_span(func.__name__):
+        with flask_tracer.tracer.start_active_span(func.__name__, child_of=flask_tracer.get_span()):
             result = func(*args, **kwargs)
         return result
     return _wrappper
