@@ -15,10 +15,6 @@ from flask_opentracing import FlaskTracing
 from flask import Flask, request, jsonify
 from opentracing_instrumentation.client_hooks import install_all_patches
 
-
-
-from lib.funcs import function_01, call_webapp
-
 app = Flask(__name__)
 
 
@@ -32,17 +28,15 @@ def initialize_tracer(service_name="xiaoyi-framework-kefu",
     return tracer
 
 
-flask_tracer = initialize_tracer(service_name="testapp-1")
+flask_tracer = initialize_tracer(service_name="testapp-3")
 install_all_patches()
 
 
-@app.route("/test_01", methods=["POST"])
-def test_01():
-    data = function_01(request.form.to_dict())
-    resp_json = call_webapp(url="http://localhost:5003/test_03", data=data).json()
-    return jsonify(resp_json)
+@app.route("/test_03", methods=["POST"])
+def test_03():
+    return jsonify(request.form.to_dict())
 
 
 if __name__ == "__main__":
-    http_server = WSGIServer(('0.0.0.0', 5001), app)
+    http_server = WSGIServer(('0.0.0.0', 5003), app)
     http_server.serve_forever()

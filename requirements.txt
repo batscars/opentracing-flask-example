@@ -1,7 +1,7 @@
+opentracing-instrumentation
 jaeger-client
 Flask-Opentracing
 Flask
 gevent
 requests
 grequests
-opentracing-instrumentation
