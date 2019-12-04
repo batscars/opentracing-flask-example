@@ -25,3 +25,6 @@ python app/webapp_01.py
 ```bash
 python client/client.py
 ```
+
+##### tips
+install_all_patches patches requests, using grequests will split traces between services

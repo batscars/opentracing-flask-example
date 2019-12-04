@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 from decorators import trace_func, trace_rpc
-import time
 import grequests
-import requests
-
+from requests import Session
+g_session = Session()
 
 @trace_func
-def function_02():
-    time.sleep(1)
+def function_02(data):
+    data["function_02"] = "function_02"
+    return data
 
 
 @trace_func
@@ -24,7 +24,7 @@ def function_00(data):
 
 @trace_rpc
 def call_webapp(url, data, headers=None):
-    # req_list = [grequests.post(url=url, data=data, headers=headers)]
-    # ret_list = grequests.map(req_list)
-    # return ret_list[0]
-    return requests.post(url=url, data=data, headers=headers)
+    req_list = [grequests.post(url=url, data=data, headers=headers, session=g_session)]
+    ret_list = grequests.map(req_list)
+    return ret_list[0]
+    # return requests.post(url=url, data=data, headers=headers)

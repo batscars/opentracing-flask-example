@@ -12,8 +12,8 @@ from flask_opentracing import FlaskTracing
 from flask import Flask, request, jsonify
 import logging
 logging.basicConfig(level=logging.DEBUG)
-from opentracing_instrumentation.client_hooks import install_all_patches
-from lib.funcs import function_00, call_webapp
+# from opentracing_instrumentation.client_hooks import install_all_patches
+from lib.funcs import function_00, function_02, call_webapp
 
 app = Flask(__name__)
 
@@ -28,13 +28,15 @@ def init_jaeger_tracer(service_name='svc-0', jaeger_host=os.getenv("JAEGER_HOST"
 
 
 flask_tracer = init_jaeger_tracer(service_name="svc-0")
-install_all_patches()
+# install_all_patches()
 
 
 @app.route("/test_00", methods=["POST"])
 def test_00():
     data = function_00(data=request.form.to_dict())
     resp_json = call_webapp(url="http://localhost:5001/test_01", data=data).json()
+    data = function_02(data=resp_json)
+    resp_json = call_webapp(url="http://localhost:5002/test_02", data=data).json()
     return jsonify(resp_json)
 
 
