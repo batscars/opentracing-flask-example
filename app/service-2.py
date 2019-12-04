@@ -19,8 +19,8 @@ from opentracing_instrumentation.client_hooks import install_all_patches
 app = Flask(__name__)
 
 
-def initialize_tracer(service_name="xiaoyi-framework-kefu",
-                      jaeger_host=os.getenv("JAEGER_HOST", "10.170.24.242"),):
+def init_jaeger_tracer(service_name="svc-2",
+                       jaeger_host=os.getenv("JAEGER_HOST", "10.170.24.242"),):
     config = Config(config={'sampler': {'type': 'const', 'param': 1}, 'local_agent': {'reporting_host': jaeger_host}},
                     service_name=service_name,
                     validate=True)
@@ -29,7 +29,7 @@ def initialize_tracer(service_name="xiaoyi-framework-kefu",
     return tracer
 
 
-flask_tracer = initialize_tracer(service_name="testapp-2")
+flask_tracer = init_jaeger_tracer(service_name="svc-2")
 install_all_patches()
 
 

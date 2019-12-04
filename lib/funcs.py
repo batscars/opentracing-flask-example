@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from app.app import trace_func, trace_rpc
+from decorators import trace_func, trace_rpc
 import time
 import grequests
 import requests
