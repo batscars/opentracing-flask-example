@@ -1,0 +1,40 @@
+version: '2'
+
+services:
+    jaeger-collector:
+      container_name: jaeger-collector
+      image: jaegertracing/jaeger-collector
+      command: ["--cassandra.keyspace=jaeger_v1_dc1", "--cassandra.servers=cassandra", "--collector.zipkin.http-port=9411"]
+      ports:
+        - "14269"
+        - "14268:14268"
+        - "14267"
+        - "14250:14250"
+        - "9411:9411"
+      restart: always
+      depends_on:
+        - cassandra-schema
+
+    jaeger-query:
+      container_name: jaeger-query
+      image: jaegertracing/jaeger-query
+      command: ["--cassandra.keyspace=jaeger_v1_dc1", "--cassandra.servers=cassandra"]
+      ports:
+        - "16686:16686"
+        - "16687"
+      restart: always
+      depends_on:
+        - cassandra-schema
+
+    cassandra:
+      container_name: cassandra
+      image: cassandra:3.11
+      volumes:
+        - /home/zhangbin05/work/jaeger_flask_example/production/data:/var/lib/cassandra
+      restart: always
+
+    cassandra-schema:
+      container_name: cassandra-schema
+      image: jaegertracing/jaeger-cassandra-schema
+      depends_on:
+        - cassandra
