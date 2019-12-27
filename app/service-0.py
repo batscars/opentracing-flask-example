@@ -2,6 +2,7 @@
 from gevent import monkey
 monkey.patch_all()
 
+import gevent
 import os
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
@@ -12,8 +13,8 @@ from flask_opentracing import FlaskTracing
 from flask import Flask, request, jsonify
 import logging
 logging.basicConfig(level=logging.DEBUG)
-# from opentracing_instrumentation.client_hooks import install_all_patches
-from lib.funcs import function_00, function_02, call_webapp
+from lib.funcs import function_00, call_webapp
+from opentracing_instrumentation import get_current_span
 
 app = Flask(__name__)
 
@@ -28,15 +29,16 @@ def init_jaeger_tracer(service_name='svc-0', jaeger_host=os.getenv("JAEGER_HOST"
 
 
 flask_tracer = init_jaeger_tracer(service_name="svc-0")
-# install_all_patches()
 
 
 @app.route("/test_00", methods=["POST"])
 def test_00():
+    task_list = []
     data = function_00(data=request.form.to_dict())
-    resp_json = call_webapp(url="http://localhost:5001/test_01", data=data).json()
-    data = function_02(data=resp_json)
-    resp_json = call_webapp(url="http://localhost:5002/test_02", data=data).json()
+    task_list.append(gevent.spawn(call_webapp, url="http://localhost:5001/test_01", data=data, span=get_current_span()))
+    task_list.append(gevent.spawn(call_webapp, url="http://localhost:5002/test_02", data=data, span=get_current_span()))
+    gevent.joinall(task_list)
+    resp_json = task_list[0].value.json().update(task_list[1].value.json())
     return jsonify(resp_json)
 
 

@@ -13,7 +13,6 @@ from gevent.pywsgi import WSGIServer
 from jaeger_client import Config
 from flask_opentracing import FlaskTracing
 from flask import Flask, request, jsonify
-# from opentracing_instrumentation.client_hooks import install_all_patches
 from lib.funcs import function_01, call_webapp
 
 app = Flask(__name__)
@@ -29,7 +28,6 @@ def init_jaeger_tracer(service_name='svc-1', jaeger_host=os.getenv("JAEGER_HOST"
 
 
 flask_tracer = init_jaeger_tracer(service_name="svc-1")
-# install_all_patches()
 
 
 @app.route("/test_01", methods=["POST"])
