@@ -8,38 +8,30 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 from gevent.pywsgi import WSGIServer
-from jaeger_client import Config
-from flask_opentracing import FlaskTracing
 from flask import Flask, request, jsonify
 import logging
 logging.basicConfig(level=logging.DEBUG)
-from lib.funcs import function_00, call_webapp
-from opentracing_instrumentation import get_current_span
+from lib.funcs import function_call
+from opentracing_flask.tracer import create_tracer, get_global_span
+from opentracing_flask import g_requests
+from opentracing_flask.wrappers import func_call_wrapper
 
 app = Flask(__name__)
+flask_tracer = create_tracer(service_name="svc-0", flask_app=app)
 
 
-def init_jaeger_tracer(service_name='svc-0', jaeger_host=os.getenv("JAEGER_HOST", "10.170.24.242")):
-    config = Config(config={'sampler': {'type': 'const', 'param': 1}, 'local_agent': {'reporting_host': jaeger_host}},
-                    service_name=service_name,
-                    validate=True)
-    jaeger_tracer = config.initialize_tracer()
-    tracer = FlaskTracing(jaeger_tracer, True, app)
-    return tracer
-
-
-flask_tracer = init_jaeger_tracer(service_name="svc-0")
+@func_call_wrapper
+def parreal_request(data):
+    task_list = [gevent.spawn(g_requests.post, url="http://localhost:5001/test_01", data=data, parent_greenlet_span=get_global_span()),
+                 gevent.spawn(g_requests.post, url="http://localhost:5002/test_02", data=data, parent_greenlet_span=get_global_span())]
+    gevent.joinall(task_list)
+    return dict(value_0=task_list[0].value.json(), value_1=task_list[1].value.json())
 
 
 @app.route("/test_00", methods=["POST"])
 def test_00():
-    task_list = []
-    data = function_00(data=request.form.to_dict())
-    task_list.append(gevent.spawn(call_webapp, url="http://localhost:5001/test_01", data=data, span=get_current_span()))
-    task_list.append(gevent.spawn(call_webapp, url="http://localhost:5002/test_02", data=data, span=get_current_span()))
-    gevent.joinall(task_list)
-    resp_json = task_list[0].value.json().update(task_list[1].value.json())
-    return jsonify(resp_json)
+    data = function_call(data=request.form.to_dict(), service="svc-0")
+    return jsonify(parreal_request(data))
 
 
 if __name__ == "__main__":
